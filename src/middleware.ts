@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { updateSession } from "@/utils/supabase/middleware";
+
+const PROTECTED_ROUTES = ["/dashboard", "/account"];
 
 // Constant-time string comparison — runs over the full length of both inputs
 // so the elapsed time does not reveal how many characters match.
@@ -93,11 +96,30 @@ export async function middleware(request: NextRequest) {
       const loginUrl = new URL("/admin/login", request.url);
       return NextResponse.redirect(loginUrl);
     }
+    return NextResponse.next();
   }
 
-  return NextResponse.next();
+  // All other routes — refresh the Supabase session and gate member-only pages
+  const { response, user } = await updateSession(request);
+
+  if (!user && PROTECTED_ROUTES.some((route) => pathname.startsWith(route))) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  return response;
 }
 
 export const config = {
-  matcher: ["/api/members/:path*", "/admin/:path*", "/api/admin/:path*"],
+  matcher: [
+    "/api/members/:path*",
+    "/admin/:path*",
+    "/api/admin/:path*",
+    /*
+     * Match all other request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    "/((?!_next/static|_next/image|favicon.ico).*)",
+  ],
 };
