@@ -2,8 +2,10 @@ export const translations = {
   en: {
     nav: {
       features: "Features",
+      gallery: "Gallery",
       memberships: "Memberships",
       location: "Location",
+      signIn: "Sign In",
       joinNow: "Join Now",
       toggleMenu: "Toggle navigation menu",
     },
@@ -18,7 +20,7 @@ export const translations = {
       ctaSecondary: "View Memberships",
     },
     features: {
-      badge: "Why Be Fit Gym",
+      badge: "Be Fit Gym",
       titleStart: "Everything you need to ",
       titleHighlight: "train your best",
       items: [
@@ -39,36 +41,35 @@ export const translations = {
         },
       ],
     },
+    gallery: {
+      badge: "Gallery",
+      titleStart: "A look ",
+      titleHighlight: "inside our gym",
+      placeholder: "Photo coming soon",
+    },
     pricing: {
       badge: "Memberships",
       titleStart: "Plans built for ",
       titleHighlight: "every goal",
-      mostPopular: "Most Popular",
-      perMonth: "/ month",
-      choosePrefix: "Choose",
-      plans: {
-        Basic: {
-          description: "Everything you need to get started and build momentum.",
-          features: ["Full gym floor access", "Locker room & showers", "Free fitness assessment"],
+      joinNow: "Join Now",
+      startingFrom: "Starting from",
+      genders: {
+        female: {
+          title: "Female",
+          description: "Dedicated training passes for women, at a discounted rate.",
         },
-        Premium: {
-          description: "Our most popular plan — train smarter with expert support.",
-          features: [
-            "Everything in Basic",
-            "2 personal training sessions / month",
-            "Group classes included",
-            "Nutrition guidance",
-          ],
+        male: {
+          title: "Male",
+          description: "Full access training passes for men.",
         },
-        VIP: {
-          description: "The full experience for those who want it all.",
-          features: [
-            "Everything in Premium",
-            "Unlimited personal training",
-            "Priority booking & dedicated locker",
-            "Guest passes each month",
-          ],
-        },
+      },
+      passes: {
+        "1day": "1 Day Pass",
+        "1week": "1 Week Pass",
+        "1month": "1 Month Pass",
+        "3months": "3 Month Pass",
+        "6months": "6 Month Pass",
+        "1year": "1 Year Pass",
       },
     },
     contact: {
@@ -109,21 +110,17 @@ export const translations = {
         emailPlaceholder: "jane@example.com",
         phone: "Phone number",
         phonePlaceholder: "+383 4X XXX XXX",
-        membershipPlan: "Membership plan",
+        gender: "Gender",
+        membershipPlan: "Pass duration",
         paymentMethod: "Payment method",
-        cardNumber: "Card number",
-        cardNumberPlaceholder: "4242 4242 4242 4242",
-        expiry: "Expiry",
-        cvc: "CVC",
       },
       errors: {
         fullName: "Please enter your full name.",
         email: "Enter a valid email address.",
         phone: "Enter a valid phone number.",
+        gender: "Select your gender.",
+        passId: "Select a pass duration.",
         paymentMethod: "Select a payment method.",
-        cardNumber: "Enter a valid card number.",
-        cardExpiry: "Use MM/YY format.",
-        cardCvc: "Enter a valid CVC.",
         bankTerminal: "Couldn't reach the bank terminal. Please try again.",
       },
       buttons: {
@@ -139,6 +136,11 @@ export const translations = {
         cash: { label: "Cash at Gym", description: "Pay when you arrive" },
       },
       infoPanels: {
+        card: {
+          title: "Secure card payment",
+          description:
+            "After you continue you'll be redirected to your bank's secure payment page to enter your card details. Be Fit Gym never sees or stores your card number.",
+        },
         transfer: {
           title: "Pay by bank transfer",
           description:
@@ -150,10 +152,6 @@ export const translations = {
             "Reserve your spot now and settle your membership fee in cash on your first visit. Just bring a valid ID to complete registration.",
         },
       },
-      cardPreview: { cardHolder: "Card holder", yourName: "Your Name", expires: "Expires" },
-      cardNotePrefix: "Card payments will be processed through our upcoming ",
-      cardNoteHighlight: "VPOS / Paysera",
-      cardNoteSuffix: " gateway integration. For now, this is a preview of the checkout experience.",
       bankRedirect: "Redirecting to secure bank terminal...",
       submitting: "Securing transaction connection...",
       success: {
@@ -199,28 +197,30 @@ export const translations = {
   sq: {
     nav: {
       features: "Veçoritë",
+      gallery: "Galeria",
       memberships: "Anëtarësimet",
       location: "Lokacioni",
-      joinNow: "Bashkohu Tani",
+      signIn: "Hyr",
+      joinNow: "Fillo Tani",
       toggleMenu: "Shfaq/fshih menynë e navigimit",
     },
     hero: {
       badge: "Stërvitje Premium · Suharekë",
-      titleStart: "Tejkalo kufijtë. Qëndro ",
-      titleHighlight: "në formë për jetë",
+      titleStart: "Tejkalo kufijtë. Be ",
+      titleHighlight: "fit për jetë",
       titleEnd: ".",
       subtitle:
         "Destinacioni kryesor i fitnesit në Suharekë — pajisje moderne, trajnerë ekspertë dhe një komunitet i krijuar për të të mbajtur në lëvizje drejt versionit tënd më të fortë.",
-      ctaPrimary: "Bashkohu Tani",
+      ctaPrimary: "Fillo Tani",
       ctaSecondary: "Shiko Anëtarësimet",
     },
     features: {
-      badge: "Pse Be Fit Gym",
+      badge: "Be Fit Gym",
       titleStart: "Gjithçka që të duhet për të ",
       titleHighlight: "u stërvitur më së miri",
       items: [
         {
-          title: "Pajisje Premium për Kardio dhe Forcë",
+          title: "Pajisje Premium për Cardio dhe Forcë",
           description:
             "Stërvitu me makineri dhe pesha të nivelit të lartë, të mirëmbajtura dhe të përditësuara rregullisht për ta bërë çdo seancë efikase dhe të sigurt.",
         },
@@ -236,36 +236,35 @@ export const translations = {
         },
       ],
     },
+    gallery: {
+      badge: "Galeria",
+      titleStart: "Një vështrim ",
+      titleHighlight: "brenda sallës sonë",
+      placeholder: "Fotoja vjen së shpejti",
+    },
     pricing: {
       badge: "Anëtarësimet",
       titleStart: "Plane të krijuara për ",
       titleHighlight: "çdo qëllim",
-      mostPopular: "Më i Popullarizuari",
-      perMonth: "/ muaj",
-      choosePrefix: "Zgjidh",
-      plans: {
-        Basic: {
-          description: "Gjithçka që të duhet për të filluar dhe për të ndërtuar ritmin tënd.",
-          features: ["Qasje e plotë në sallë", "Dhoma zhveshjeje dhe dushe", "Vlerësim falas i kushtetutës fizike"],
+      joinNow: "Fillo Tani",
+      startingFrom: "Duke filluar nga",
+      genders: {
+        female: {
+          title: "Femra",
+          description: "Pasa stërvitje të dedikuara për femra, me çmim të zbritur.",
         },
-        Premium: {
-          description: "Plani ynë më i popullarizuar — stërvitu më mençur me mbështetje nga ekspertët.",
-          features: [
-            "Gjithçka nga plani Basic",
-            "2 seanca trajnimi personal / muaj",
-            "Klasa në grup të përfshira",
-            "Udhëzime për ushqyerje",
-          ],
+        male: {
+          title: "Meshkuj",
+          description: "Pasa stërvitje me qasje të plotë për meshkuj.",
         },
-        VIP: {
-          description: "Përvoja e plotë për ata që duan gjithçka.",
-          features: [
-            "Gjithçka nga plani Premium",
-            "Trajnim personal i pakufizuar",
-            "Rezervim me prioritet dhe dollap i dedikuar",
-            "Ftesa për mysafirë çdo muaj",
-          ],
-        },
+      },
+      passes: {
+        "1day": "Pass 1 Ditë",
+        "1week": "Pass 1 Javë",
+        "1month": "Pass 1 Muaj",
+        "3months": "Pass 3 Muaj",
+        "6months": "Pass 6 Muaj",
+        "1year": "Pass 1 Vit",
       },
     },
     contact: {
@@ -306,21 +305,17 @@ export const translations = {
         emailPlaceholder: "jane@example.com",
         phone: "Numri i telefonit",
         phonePlaceholder: "+383 4X XXX XXX",
-        membershipPlan: "Plani i anëtarësimit",
+        gender: "Gjinia",
+        membershipPlan: "Kohëzgjatja e pasit",
         paymentMethod: "Mënyra e pagesës",
-        cardNumber: "Numri i kartelës",
-        cardNumberPlaceholder: "4242 4242 4242 4242",
-        expiry: "Skadimi",
-        cvc: "CVC",
       },
       errors: {
         fullName: "Të lutemi shkruaj emrin tënd të plotë.",
         email: "Shkruaj një adresë email-i të vlefshme.",
         phone: "Shkruaj një numër telefoni të vlefshëm.",
+        gender: "Zgjidh gjininë.",
+        passId: "Zgjidh kohëzgjatjen e pasit.",
         paymentMethod: "Zgjidh një mënyrë pagese.",
-        cardNumber: "Shkruaj një numër kartele të vlefshëm.",
-        cardExpiry: "Përdor formatin MM/VV.",
-        cardCvc: "Shkruaj një CVC të vlefshëm.",
         bankTerminal: "Nuk u arrit të kontaktohej terminali bankar. Provo përsëri.",
       },
       buttons: {
@@ -336,6 +331,11 @@ export const translations = {
         cash: { label: "Cash në Sallë", description: "Paguaj kur të vish" },
       },
       infoPanels: {
+        card: {
+          title: "Pagesë e sigurt me kartelë",
+          description:
+            "Pasi të vazhdosh, do të ridrejtohesh te faqja e sigurt e pagesës së bankës tënde për të futur të dhënat e kartelës. Be Fit Gym nuk i sheh dhe nuk i ruan kurrë të dhënat e kartelës tënde.",
+        },
         transfer: {
           title: "Paguaj me transfer bankar",
           description:
@@ -347,10 +347,6 @@ export const translations = {
             "Rezervo vendin tënd tani dhe paguaj tarifën e anëtarësimit cash gjatë vizitës së parë. Mjafton të sjellësh një ID të vlefshme për të përfunduar regjistrimin.",
         },
       },
-      cardPreview: { cardHolder: "Mbajtësi i kartelës", yourName: "Emri Yt", expires: "Skadon" },
-      cardNotePrefix: "Pagesat me kartelë do të procesohen përmes integrimit tonë të ardhshëm ",
-      cardNoteHighlight: "VPOS / Paysera",
-      cardNoteSuffix: ". Për momentin, kjo është një paraqitje e përvojës së pagesës.",
       bankRedirect: "Duke u ridrejtuar te terminali i sigurt bankar...",
       submitting: "Duke siguruar lidhjen e transaksionit...",
       success: {

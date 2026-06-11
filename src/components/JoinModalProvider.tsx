@@ -2,13 +2,14 @@
 
 import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
 import JoinModal from "./JoinModal";
+import type { Gender } from "@/lib/membershipPlans";
 
 type JoinModalContextValue = {
   isOpen: boolean;
-  selectedTier: string | null;
+  selectedGender: Gender | null;
   /** Increments on every `openJoinModal` call — use as a React `key` to mount a fresh form each time. */
   sessionId: number;
-  openJoinModal: (tier?: string) => void;
+  openJoinModal: (gender?: Gender) => void;
   closeJoinModal: () => void;
 };
 
@@ -24,11 +25,11 @@ export function useJoinModal() {
 
 export default function JoinModalProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedTier, setSelectedTier] = useState<string | null>(null);
+  const [selectedGender, setSelectedGender] = useState<Gender | null>(null);
   const [sessionId, setSessionId] = useState(0);
 
-  const openJoinModal = useCallback((tier?: string) => {
-    setSelectedTier(tier ?? null);
+  const openJoinModal = useCallback((gender?: Gender) => {
+    setSelectedGender(gender ?? null);
     setSessionId((id) => id + 1);
     setIsOpen(true);
   }, []);
@@ -36,7 +37,7 @@ export default function JoinModalProvider({ children }: { children: ReactNode })
   const closeJoinModal = useCallback(() => setIsOpen(false), []);
 
   return (
-    <JoinModalContext.Provider value={{ isOpen, selectedTier, sessionId, openJoinModal, closeJoinModal }}>
+    <JoinModalContext.Provider value={{ isOpen, selectedGender, sessionId, openJoinModal, closeJoinModal }}>
       {children}
       <JoinModal />
     </JoinModalContext.Provider>

@@ -10,22 +10,14 @@ import {
   MessageCircle,
   QrCode,
   Wallet,
-  Wifi,
   X,
 } from "lucide-react";
 import { useJoinModal } from "./JoinModalProvider";
 import { useLanguage } from "./LanguageProvider";
 import type { Translations } from "@/lib/translations";
+import { PASS_DURATIONS, getPackageById, type Gender, type PassDurationId } from "@/lib/membershipPlans";
 
-const TIERS = ["Basic", "Premium", "VIP"] as const;
-
-// Mirrors the hardcoded package records on the server (see vpos-initiate route)
-// so the request body carries a price the API can verify.
-const TIER_PACKAGES: Record<(typeof TIERS)[number], { id: string; price: number }> = {
-  Basic: { id: "basic", price: 29 },
-  Premium: { id: "premium", price: 49 },
-  VIP: { id: "vip", price: 79 },
-};
+const GENDERS: Gender[] = ["female", "male"];
 
 const PAYMENT_METHOD_IDS = ["card", "transfer", "cash"] as const;
 const PAYMENT_METHOD_ICONS = { card: CreditCard, transfer: Wallet, cash: Banknote };
@@ -36,11 +28,9 @@ type FormState = {
   fullName: string;
   email: string;
   phone: string;
-  tier: string;
+  gender: Gender | null;
+  passId: PassDurationId | null;
   paymentMethod: PaymentMethodId | "";
-  cardNumber: string;
-  cardExpiry: string;
-  cardCvc: string;
 };
 
 type FormErrors = Partial<Record<keyof FormState, string>>;
@@ -49,21 +39,16 @@ const INITIAL_FORM: FormState = {
   fullName: "",
   email: "",
   phone: "",
-  tier: TIERS[0],
+  gender: null,
+  passId: null,
   paymentMethod: "",
-  cardNumber: "",
-  cardExpiry: "",
-  cardCvc: "",
 };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_PATTERN = /^[+\d][\d\s-]{6,}$/;
-const CARD_NUMBER_PATTERN = /^[\d\s]{12,19}$/;
-const CARD_EXPIRY_PATTERN = /^(0[1-9]|1[0-2])\/\d{2}$/;
-const CARD_CVC_PATTERN = /^\d{3,4}$/;
 
 export default function JoinModal() {
-  const { isOpen, selectedTier, sessionId, closeJoinModal } = useJoinModal();
+  const { isOpen, selectedGender, sessionId, closeJoinModal } = useJoinModal();
 
   useEffect(() => {
     if (!isOpen) return;
@@ -77,20 +62,20 @@ export default function JoinModal() {
   if (!isOpen) return null;
 
   // Keying by `sessionId` mounts a brand-new form (with a clean slate and the
-  // freshly chosen tier pre-selected) every time the modal is opened.
-  return <JoinModalContent key={sessionId} initialTier={selectedTier} onClose={closeJoinModal} />;
+  // freshly chosen gender pre-selected) every time the modal is opened.
+  return <JoinModalContent key={sessionId} initialGender={selectedGender} onClose={closeJoinModal} />;
 }
 
 function JoinModalContent({
-  initialTier,
+  initialGender,
   onClose,
 }: {
-  initialTier: string | null;
+  initialGender: Gender | null;
   onClose: () => void;
 }) {
   const { t } = useLanguage();
   const [step, setStep] = useState<1 | 2>(1);
-  const [form, setForm] = useState<FormState>({ ...INITIAL_FORM, tier: initialTier ?? INITIAL_FORM.tier });
+  const [form, setForm] = useState<FormState>({ ...INITIAL_FORM, gender: initialGender });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRedirectingToBank, setIsRedirectingToBank] = useState(false);
@@ -107,6 +92,8 @@ function JoinModalContent({
     if (!form.fullName.trim()) next.fullName = t.joinModal.errors.fullName;
     if (!EMAIL_PATTERN.test(form.email)) next.email = t.joinModal.errors.email;
     if (!PHONE_PATTERN.test(form.phone)) next.phone = t.joinModal.errors.phone;
+    if (!form.gender) next.gender = t.joinModal.errors.gender;
+    if (!form.passId) next.passId = t.joinModal.errors.passId;
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -114,11 +101,6 @@ function JoinModalContent({
   const validateStep2 = () => {
     const next: FormErrors = {};
     if (!form.paymentMethod) next.paymentMethod = t.joinModal.errors.paymentMethod;
-    if (form.paymentMethod === "card") {
-      if (!CARD_NUMBER_PATTERN.test(form.cardNumber)) next.cardNumber = t.joinModal.errors.cardNumber;
-      if (!CARD_EXPIRY_PATTERN.test(form.cardExpiry)) next.cardExpiry = t.joinModal.errors.cardExpiry;
-      if (!CARD_CVC_PATTERN.test(form.cardCvc)) next.cardCvc = t.joinModal.errors.cardCvc;
-    }
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -142,7 +124,7 @@ function JoinModalContent({
 
     setIsSubmitting(true);
     await new Promise<void>((resolve) => setTimeout(resolve, 2000));
-    setMembershipCode(generateMembershipCode(form.tier));
+    setMembershipCode(generateMembershipCode(form.gender!, form.passId!));
     setIsSubmitting(false);
     setIsSuccess(true);
   };
@@ -151,7 +133,7 @@ function JoinModalContent({
     setIsRedirectingToBank(true);
 
     try {
-      const selectedPackage = TIER_PACKAGES[form.tier as keyof typeof TIER_PACKAGES];
+      const selectedPackage = getPackageById(`${form.gender!}-${form.passId!}`)!;
 
       const response = await fetch("/api/checkout/vpos-initiate", {
         method: "POST",
@@ -201,6 +183,11 @@ function JoinModalContent({
     onClose();
   };
 
+  const planLabel =
+    form.gender && form.passId
+      ? `${t.pricing.genders[form.gender].title} · ${t.pricing.passes[form.passId]}`
+      : "";
+
   return (
     <>
       {isRedirectingToBank && <BankRedirectOverlay />}
@@ -228,15 +215,17 @@ function JoinModalContent({
 
         <div className="overflow-y-auto px-6 pb-8 pt-8 sm:px-8">
           {isSuccess ? (
-            <SuccessState tier={form.tier} membershipCode={membershipCode} onClose={handleClose} t={t} />
+            <SuccessState planLabel={planLabel} membershipCode={membershipCode} onClose={handleClose} t={t} />
           ) : isSubmitting ? (
             <SubmittingState label={t.joinModal.submitting} />
           ) : (
             <>
               <div>
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-glow">
-                  {t.joinModal.membershipBadge(form.tier)}
-                </span>
+                {planLabel && (
+                  <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-glow">
+                    {t.joinModal.membershipBadge(planLabel)}
+                  </span>
+                )}
                 <h2
                   id="join-modal-title"
                   className="mt-4 text-2xl font-extrabold uppercase tracking-tight text-foreground sm:text-3xl"
@@ -408,22 +397,45 @@ function PersonalInfoStep({ form, errors, onChange, t }: StepProps) {
         />
       </Field>
 
-      <Field label={f.membershipPlan}>
-        <div className="grid grid-cols-3 gap-3">
-          {TIERS.map((tier) => (
+      <Field label={f.gender} error={errors.gender}>
+        <div className="grid grid-cols-2 gap-3">
+          {GENDERS.map((gender) => (
             <button
-              key={tier}
+              key={gender}
               type="button"
-              onClick={() => onChange("tier", tier)}
+              onClick={() => onChange("gender", gender)}
               className={`rounded-xl border px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors duration-300 ${
-                form.tier === tier
+                form.gender === gender
                   ? "border-cyan-glow bg-cyan-glow/10 text-cyan-glow"
                   : "border-white/10 bg-white/5 text-silver hover:border-white/20 hover:text-foreground"
               }`}
             >
-              {tier}
+              {t.pricing.genders[gender].title}
             </button>
           ))}
+        </div>
+      </Field>
+
+      <Field label={f.membershipPlan} error={errors.passId}>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {PASS_DURATIONS.map(({ id }) => {
+            const pkg = getPackageById(`${form.gender ?? "female"}-${id}`)!;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => onChange("passId", id)}
+                className={`flex flex-col items-center gap-1 rounded-xl border px-3 py-3 text-center transition-colors duration-300 ${
+                  form.passId === id
+                    ? "border-cyan-glow bg-cyan-glow/10 text-cyan-glow"
+                    : "border-white/10 bg-white/5 text-silver hover:border-white/20 hover:text-foreground"
+                }`}
+              >
+                <span className="text-xs font-semibold uppercase tracking-wide">{t.pricing.passes[id]}</span>
+                <span className="text-sm font-bold text-foreground">€{pkg.price}</span>
+              </button>
+            );
+          })}
         </div>
       </Field>
     </div>
@@ -465,7 +477,9 @@ function PaymentStep({ form, errors, onChange, t }: StepProps) {
         </div>
       </Field>
 
-      {form.paymentMethod === "card" && <CardPaymentPanel form={form} errors={errors} onChange={onChange} t={t} />}
+      {form.paymentMethod === "card" && (
+        <InfoPanel icon={CreditCard} title={j.infoPanels.card.title} description={j.infoPanels.card.description} />
+      )}
 
       {form.paymentMethod === "transfer" && (
         <InfoPanel icon={Wallet} title={j.infoPanels.transfer.title} description={j.infoPanels.transfer.description} />
@@ -476,89 +490,6 @@ function PaymentStep({ form, errors, onChange, t }: StepProps) {
       )}
     </div>
   );
-}
-
-function CardPaymentPanel({ form, errors, onChange, t }: StepProps) {
-  const j = t.joinModal;
-  return (
-    <div className="flex flex-col gap-5 rounded-xl border border-white/10 bg-white/5 p-4">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-electric p-5 text-obsidian shadow-[0_0_40px_-10px_var(--color-cyan-glow)]">
-        <div className="flex items-center justify-between">
-          <div className="h-7 w-10 rounded-md bg-obsidian/15" />
-          <Wifi className="h-5 w-5 rotate-90 text-obsidian/70" strokeWidth={1.75} />
-        </div>
-        <p className="mt-7 font-mono text-lg tracking-[0.25em]">{formatCardPreview(form.cardNumber)}</p>
-        <div className="mt-6 flex items-end justify-between text-[11px] uppercase tracking-wide">
-          <div>
-            <p className="text-obsidian/60">{j.cardPreview.cardHolder}</p>
-            <p className="font-semibold">{form.fullName.trim() || j.cardPreview.yourName}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-obsidian/60">{j.cardPreview.expires}</p>
-            <p className="font-semibold">{form.cardExpiry || "MM/YY"}</p>
-          </div>
-        </div>
-      </div>
-
-      <Field label={j.fields.cardNumber} error={errors.cardNumber}>
-        <input
-          type="text"
-          inputMode="numeric"
-          value={form.cardNumber}
-          onChange={(event) => onChange("cardNumber", formatCardNumberInput(event.target.value))}
-          placeholder={j.fields.cardNumberPlaceholder}
-          maxLength={19}
-          className={inputClass(Boolean(errors.cardNumber))}
-        />
-      </Field>
-      <div className="grid grid-cols-2 gap-4">
-        <Field label={j.fields.expiry} error={errors.cardExpiry}>
-          <input
-            type="text"
-            inputMode="numeric"
-            value={form.cardExpiry}
-            onChange={(event) => onChange("cardExpiry", formatExpiryInput(event.target.value))}
-            placeholder="MM/YY"
-            maxLength={5}
-            className={inputClass(Boolean(errors.cardExpiry))}
-          />
-        </Field>
-        <Field label={j.fields.cvc} error={errors.cardCvc}>
-          <input
-            type="text"
-            inputMode="numeric"
-            value={form.cardCvc}
-            onChange={(event) => onChange("cardCvc", event.target.value)}
-            placeholder="123"
-            className={inputClass(Boolean(errors.cardCvc))}
-          />
-        </Field>
-      </div>
-
-      <p className="text-xs leading-relaxed text-silver">
-        {j.cardNotePrefix}
-        <span className="text-cyan-glow">{j.cardNoteHighlight}</span>
-        {j.cardNoteSuffix}
-      </p>
-    </div>
-  );
-}
-
-function formatCardNumberInput(rawValue: string) {
-  const digits = rawValue.replace(/\D/g, "").slice(0, 16);
-  return digits.match(/.{1,4}/g)?.join(" ") ?? digits;
-}
-
-function formatExpiryInput(rawValue: string) {
-  const digits = rawValue.replace(/\D/g, "").slice(0, 4);
-  if (digits.length < 3) return digits;
-  return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-}
-
-function formatCardPreview(rawValue: string) {
-  const digits = rawValue.replace(/\D/g, "").slice(0, 16);
-  const padded = digits + "•".repeat(16 - digits.length);
-  return padded.match(/.{1,4}/g)!.join("  ");
 }
 
 function InfoPanel({
@@ -606,25 +537,25 @@ function SubmittingState({ label }: { label: string }) {
   );
 }
 
-function generateMembershipCode(tier: string) {
+function generateMembershipCode(gender: Gender, passId: PassDurationId) {
   const random = Math.random().toString(36).slice(2, 8).toUpperCase();
-  return `BFG-${tier.slice(0, 3).toUpperCase()}-${random}`;
+  return `BFG-${gender.slice(0, 1).toUpperCase()}${passId.toUpperCase()}-${random}`;
 }
 
 function SuccessState({
-  tier,
+  planLabel,
   membershipCode,
   onClose,
   t,
 }: {
-  tier: string;
+  planLabel: string;
   membershipCode: string;
   onClose: () => void;
   t: Translations;
 }) {
   const s = t.joinModal.success;
   const whatsappHref = `https://wa.me/38348367555?text=${encodeURIComponent(
-    s.whatsappMessage(tier, membershipCode)
+    s.whatsappMessage(planLabel, membershipCode)
   )}`;
 
   return (
@@ -640,7 +571,7 @@ function SuccessState({
         </h2>
         <p className="mt-2 max-w-sm text-sm leading-relaxed text-silver">
           {s.subtitlePrefix}
-          <span className="font-semibold text-foreground">{tier}</span>
+          <span className="font-semibold text-foreground">{planLabel}</span>
           {s.subtitleSuffix}
         </p>
       </div>

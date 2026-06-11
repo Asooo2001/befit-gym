@@ -1,33 +1,6 @@
-import { createHmac, timingSafeEqual } from "crypto";
 import { supabase } from "@/lib/supabase";
-
-// Duration in months for each membership tier.
-const TIER_MONTHS: Record<string, number> = {
-  Basic:   1,
-  Premium: 1,
-  VIP:     1,
-};
-
-// Asseco/NestPay-style HMAC-SHA256: sort all non-HASH field names alphabetically,
-// join as key=value pairs, sign with the shared secret.
-function computeHash(fields: Record<string, string>): string {
-  const secret = process.env.VPOS_SECRET_KEY ?? "";
-  const message = Object.keys(fields)
-    .sort()
-    .map((k) => `${k}=${fields[k]}`)
-    .join("&");
-  return createHmac("sha256", secret).update(message).digest("hex");
-}
-
-function verifyHash(fields: Record<string, string>, receivedHash: string): boolean {
-  const expected = computeHash(fields);
-  try {
-    return timingSafeEqual(Buffer.from(expected, "utf8"), Buffer.from(receivedHash, "utf8"));
-  } catch {
-    // Buffers differ in length — definitely not equal.
-    return false;
-  }
-}
+import { getVposSecret, verifySignature } from "@/lib/vpos";
+import { getPackageByName } from "@/lib/membershipPlans";
 
 function plainText(body: string, status = 200): Response {
   return new Response(body, { status, headers: { "Content-Type": "text/plain" } });
@@ -46,41 +19,100 @@ export async function POST(request: Request) {
   }
 
   const { HASH, ...fieldsToVerify } = params;
-  const { ResponseCode, OrderId, AuthCode } = fieldsToVerify;
+  const { ResponseCode, OrderId, AuthCode, TotalAmount } = fieldsToVerify;
 
   // ── 2. Validate signature ────────────────────────────────────────────────────
-  if (!HASH || !OrderId || !verifyHash(fieldsToVerify, HASH)) {
+  let secret: string;
+  try {
+    secret = getVposSecret();
+  } catch (err) {
+    console.error("VPOS configuration error:", err);
+    return plainText("INVALID", 503);
+  }
+
+  const signatureValid = Boolean(HASH) && verifySignature(fieldsToVerify, HASH, secret);
+
+  // Record the raw callback for dispute auditing, regardless of validity.
+  await supabase.from("payment_callbacks").insert({
+    order_id:        OrderId ?? null,
+    payload:         params,
+    signature_valid: signatureValid,
+  });
+
+  if (!signatureValid || !OrderId) {
     return plainText("INVALID", 400);
   }
 
-  const isSuccess = ResponseCode === "00";
-
-  // ── 3. Update transaction ────────────────────────────────────────────────────
+  // ── 3. Load the transaction and enforce idempotency ──────────────────────────
   const { data: tx, error: txError } = await supabase
+    .from("transactions")
+    .select("member_id, membership_id, amount, status")
+    .eq("id", OrderId)
+    .single();
+
+  if (txError || !tx) {
+    // Unknown order — acknowledge so the bank stops retrying.
+    return plainText("OK");
+  }
+
+  const transaction = tx as {
+    member_id: string;
+    membership_id: string | null;
+    amount: number;
+    status: string;
+  };
+
+  // Already processed: a replayed or duplicate callback must not re-run the
+  // activation/deletion side effects. Acknowledge and stop.
+  if (transaction.status !== "initiated") {
+    return plainText("OK");
+  }
+
+  // ── 4. Verify the amount the bank reports matches what we recorded ───────────
+  // Guards against a tampered or mismatched callback activating a membership
+  // that was paid for at a different price.
+  const amountMatches =
+    TotalAmount === undefined ||
+    Number(TotalAmount).toFixed(2) === Number(transaction.amount).toFixed(2);
+
+  const isSuccess = ResponseCode === "00" && amountMatches;
+
+  // ── 5. Mark the transaction terminal state (only from 'initiated') ───────────
+  const { data: updatedTx } = await supabase
     .from("transactions")
     .update({
       status:         isSuccess ? "completed" : "failed",
       bank_reference: AuthCode ?? null,
     })
     .eq("id", OrderId)
-    .select("member_id")
-    .single();
+    .eq("status", "initiated") // optimistic lock: lose the race ⇒ no rows
+    .select("id")
+    .maybeSingle();
 
-  if (txError || !tx) {
-    // Unknown order — acknowledge the bank so it stops retrying, but log nothing.
+  // Another concurrent callback already transitioned this transaction.
+  if (!updatedTx) {
     return plainText("OK");
   }
 
+  // ── 6. Apply the side effect to the exact linked membership ──────────────────
+  if (!transaction.membership_id) {
+    // Legacy transaction with no linked membership — nothing precise to update.
+    return plainText(isSuccess ? "APPROVED" : "OK");
+  }
+
   if (isSuccess) {
-    // ── 4a. Activate the membership ────────────────────────────────────────────
-    // Derive tier name from order ID format: BEFIT-{TIER}-{timestamp}-{uuid}
-    const tierKey = OrderId.split("-")[1] ?? "";
-    const tierName = tierKey.charAt(0).toUpperCase() + tierKey.slice(1).toLowerCase();
-    const months = TIER_MONTHS[tierName] ?? 1;
+    const { data: m } = await supabase
+      .from("memberships")
+      .select("tier_name")
+      .eq("id", transaction.membership_id)
+      .maybeSingle();
+
+    const tierName = (m as { tier_name: string } | null)?.tier_name ?? "";
+    const days = getPackageByName(tierName)?.days ?? 30;
 
     const startDate = new Date();
     const endDate   = new Date(startDate);
-    endDate.setMonth(endDate.getMonth() + months);
+    endDate.setDate(endDate.getDate() + days);
 
     await supabase
       .from("memberships")
@@ -89,18 +121,17 @@ export async function POST(request: Request) {
         start_date: startDate.toISOString(),
         end_date:   endDate.toISOString(),
       })
-      .eq("member_id", tx.member_id)
-      .eq("status",    "pending_payment")
-      .eq("tier_name", tierName);
+      .eq("id",     transaction.membership_id)
+      .eq("status", "pending_payment");
   } else {
-    // ── 4b. Remove the unfulfilled membership record ───────────────────────────
-    // The transactions row already captures the failure for audit purposes.
+    // Remove the unfulfilled membership. The transactions row already records
+    // the failure for audit purposes (and the FK is ON DELETE SET NULL).
     await supabase
       .from("memberships")
       .delete()
-      .eq("member_id", tx.member_id)
-      .eq("status",    "pending_payment");
+      .eq("id",     transaction.membership_id)
+      .eq("status", "pending_payment");
   }
 
-  return plainText("APPROVED");
+  return plainText(isSuccess ? "APPROVED" : "OK");
 }

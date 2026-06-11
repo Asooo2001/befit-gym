@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type MouseEvent } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useJoinModal } from "./JoinModalProvider";
@@ -19,8 +20,9 @@ export default function Navigation() {
   const { lang, setLang, t } = useLanguage();
 
   const NAV_LINKS = [
+    { href: "#gallery", label: t.nav.gallery },
+     { href: "#memberships", label: t.nav.memberships },
     { href: "#features", label: t.nav.features },
-    { href: "#memberships", label: t.nav.memberships },
     { href: "#location", label: t.nav.location },
   ];
 
@@ -62,9 +64,16 @@ export default function Navigation() {
               setIsOpen(false);
             }
           }}
-          className="text-xl font-extrabold tracking-wide text-gradient-electric"
+          className="flex items-center"
         >
-          BE FIT GYM
+          <Image
+            src="/transparent-image.svg"
+            alt="Be Fit Gym"
+            width={200}
+            height={100}
+            className="h-50 w-auto"
+            priority
+          />
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
@@ -80,8 +89,15 @@ export default function Navigation() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-4 md:flex">
+        <div className="hidden items-center gap-6 md:flex">
           <LanguageSwitcher lang={lang} setLang={setLang} />
+
+          <Link
+            href="/login"
+            className="rounded-full border border-white/15 px-5 py-2.5 text-sm font-semibold text-silver transition-colors hover:border-cyan-glow/50 hover:text-cyan-glow"
+          >
+            {t.nav.signIn}
+          </Link>
 
           <button
             type="button"
@@ -138,6 +154,13 @@ export default function Navigation() {
                 {link.label}
               </Link>
             ))}
+            <Link
+              href="/login"
+              onClick={() => setIsOpen(false)}
+              className="rounded-lg px-3 py-3 text-base font-medium text-silver transition-colors hover:bg-white/5 hover:text-cyan-glow"
+            >
+              {t.nav.signIn}
+            </Link>
             <button
               type="button"
               onClick={() => {

@@ -1,20 +1,11 @@
-import { randomUUID, createHmac } from "crypto";
+import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { getVposConfig, signFields } from "@/lib/vpos";
+import { getPackageById } from "@/lib/membershipPlans";
 
-// Prices are the single source of truth — never trust the value sent by the client.
-const PACKAGES = [
-  { id: "basic",   name: "Basic",   price: 29 },
-  { id: "premium", name: "Premium", price: 49 },
-  { id: "vip",     name: "VIP",     price: 79 },
-] as const;
-
-const CURRENCY_EUR      = "978";
-const TRANSACTION_TYPE  = "purchase";
-
-const VPOS_GATEWAY_URL = process.env.VPOS_GATEWAY_URL ?? "https://vpos.bank.example/payment/gateway";
-const MERCHANT_ID      = process.env.VPOS_MERCHANT_ID ?? "";
-const TERMINAL_ID      = process.env.VPOS_TERMINAL_ID ?? "";
+const CURRENCY_EUR     = "978";
+const TRANSACTION_TYPE = "purchase";
 
 interface VposInitiateBody {
   fullName?:  string;
@@ -24,18 +15,18 @@ interface VposInitiateBody {
   price?:     number; // client echo — verified server-side as a sanity check
 }
 
-// Asseco/NestPay-style HMAC-SHA256: sort field names alphabetically, join as
-// key=value pairs, sign with the shared secret.
-function signPayload(fields: Record<string, string>): string {
-  const secret = process.env.VPOS_SECRET_KEY ?? "";
-  const message = Object.keys(fields)
-    .sort()
-    .map((k) => `${k}=${fields[k]}`)
-    .join("&");
-  return createHmac("sha256", secret).update(message).digest("hex");
-}
-
 export async function POST(request: Request) {
+  // ── 0. Load & validate gateway configuration ────────────────────────────────
+  // Throws if any VPOS_* env var is missing, so we never sign with an empty
+  // secret or post to a placeholder gateway.
+  let config;
+  try {
+    config = getVposConfig();
+  } catch (err) {
+    console.error("VPOS configuration error:", err);
+    return NextResponse.json({ error: "Payment gateway is not configured" }, { status: 503 });
+  }
+
   // ── 1. Parse & validate request body ────────────────────────────────────────
   let body: VposInitiateBody;
   try {
@@ -53,7 +44,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const selectedPackage = PACKAGES.find((pkg) => pkg.id === packageId);
+  const selectedPackage = getPackageById(packageId);
   if (!selectedPackage) {
     return NextResponse.json({ error: "Unknown package" }, { status: 400 });
   }
@@ -106,40 +97,49 @@ export async function POST(request: Request) {
     memberId = (newProfile as { id: string }).id;
   }
 
-  // ── 3. Generate a unique merchant order ID ───────────────────────────────────
+  // ── 3. Create the pending membership first ──────────────────────────────────
+  // Creating it up-front gives us a concrete membership id to bind the
+  // transaction to, so the callback can activate the exact right row even when
+  // a member has several outstanding orders.
+  const { data: membership, error: membershipError } = await supabase
+    .from("memberships")
+    .insert({
+      member_id: memberId,
+      tier_name: selectedPackage.name,
+      status:    "pending_payment",
+    })
+    .select("id")
+    .single();
+
+  if (membershipError || !membership) {
+    return NextResponse.json({ error: "Failed to create membership record" }, { status: 500 });
+  }
+
+  const membershipId = (membership as { id: string }).id;
+
+  // ── 4. Generate a unique merchant order ID ───────────────────────────────────
   const orderId = `BEFIT-${selectedPackage.id.toUpperCase()}-${Date.now()}-${randomUUID().slice(0, 8)}`;
   const totalAmount = selectedPackage.price.toFixed(2);
 
-  // ── 4. Record the transaction (status: initiated) ───────────────────────────
+  // ── 5. Record the transaction (status: initiated), linked to the membership ──
   const { error: txError } = await supabase.from("transactions").insert({
-    id:        orderId,
-    member_id: memberId,
-    amount:    selectedPackage.price, // always the server-authoritative price
-    status:    "initiated",
+    id:            orderId,
+    member_id:     memberId,
+    membership_id: membershipId,
+    amount:        selectedPackage.price, // always the server-authoritative price
+    status:        "initiated",
   });
 
   if (txError) {
+    // Roll back the orphaned pending membership so it can't be activated later.
+    await supabase.from("memberships").delete().eq("id", membershipId);
     return NextResponse.json({ error: "Failed to record transaction" }, { status: 500 });
-  }
-
-  // ── 5. Create matching membership (status: pending_payment) ─────────────────
-  const { error: membershipError } = await supabase.from("memberships").insert({
-    member_id: memberId,
-    tier_name: selectedPackage.name,
-    status:    "pending_payment",
-  });
-
-  if (membershipError) {
-    // Best-effort rollback: remove the orphaned transaction so the order ID
-    // can't be re-used in a confused state.
-    await supabase.from("transactions").delete().eq("id", orderId);
-    return NextResponse.json({ error: "Failed to create membership record" }, { status: 500 });
   }
 
   // ── 6. Build and sign the VPOS gateway payload ──────────────────────────────
   const fields: Record<string, string> = {
-    MerchantID:      MERCHANT_ID,
-    TerminalID:      TERMINAL_ID,
+    MerchantID:      config.merchantId,
+    TerminalID:      config.terminalId,
     TotalAmount:     totalAmount,
     Currency:        CURRENCY_EUR,
     TransactionType: TRANSACTION_TYPE,
@@ -149,10 +149,10 @@ export async function POST(request: Request) {
     CustomerPhone:   phone,
   };
 
-  const signature = signPayload(fields);
+  const signature = signFields(fields, config.secretKey);
 
   return NextResponse.json({
-    gatewayUrl: VPOS_GATEWAY_URL,
+    gatewayUrl: config.gatewayUrl,
     formFields: { ...fields, Signature: signature },
   });
 }

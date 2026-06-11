@@ -2,12 +2,7 @@
 
 import { useState } from "react";
 import { Loader2, Zap } from "lucide-react";
-
-const TIER_PACKAGE_IDS: Record<string, string> = {
-  Basic: "basic",
-  Premium: "premium",
-  VIP: "vip",
-};
+import { getPackageByName } from "@/lib/membershipPlans";
 
 interface RenewMembershipButtonProps {
   fullName: string;
@@ -30,7 +25,7 @@ export default function RenewMembershipButton({
     setIsRedirecting(true);
 
     try {
-      const packageId = TIER_PACKAGE_IDS[tierName] ?? "basic";
+      const packageId = getPackageByName(tierName)?.id ?? "male-1month";
 
       const response = await fetch("/api/checkout/vpos-initiate", {
         method: "POST",

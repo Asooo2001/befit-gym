@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 import { useLanguage } from "./LanguageProvider";
@@ -18,35 +19,52 @@ export default function Footer() {
   const { t } = useLanguage();
 
   const FOOTER_LINKS = [
+    { href: "#gallery", label: t.nav.gallery },
+     { href: "#memberships", label: t.nav.memberships },
     { href: "#features", label: t.nav.features },
-    { href: "#memberships", label: t.nav.memberships },
     { href: "#location", label: t.nav.location },
   ];
 
   return (
     <footer className="border-t border-white/10 bg-obsidian">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-12 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <Link
-            href="/"
-            className="text-xl font-extrabold tracking-wide text-gradient-electric"
-          >
-            BE FIT GYM
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-12 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col items-center sm:items-start">
+          <Link href="/"  className="-my-8 flex items-center">
+            <Image
+              src="/transparent-image.svg"
+              alt="Be Fit Gym"
+              width={160}
+              height={80}
+              className="h-40 w-auto"
+            />
           </Link>
-          <p className="mt-2 text-sm text-silver">{t.footer.tagline}</p>
         </div>
 
-        <nav className="flex flex-wrap items-center gap-x-6 gap-y-2">
-          {FOOTER_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-sm font-medium text-silver transition-colors hover:text-cyan-glow"
-            >
-              {link.label}
+        <div className="flex flex-wrap gap-x-16 gap-y-8">
+          <nav className="flex flex-col gap-2">
+            {FOOTER_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-sm font-medium text-silver transition-colors hover:text-cyan-glow"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+
+          <nav className="flex flex-col gap-2" aria-label="Legal">
+            <Link href="/privacy-policy" className="text-sm font-medium text-silver transition-colors hover:text-cyan-glow">
+              Privacy Policy
             </Link>
-          ))}
-        </nav>
+            <Link href="/terms-of-service" className="text-sm font-medium text-silver transition-colors hover:text-cyan-glow">
+              Terms of Service
+            </Link>
+            <Link href="/refund-policy" className="text-sm font-medium text-silver transition-colors hover:text-cyan-glow">
+              Refund Policy
+            </Link>
+          </nav>
+        </div>
 
         <div className="flex items-center gap-3">
           {SOCIAL_LINKS.map(({ href, label, icon: Icon }) => (
@@ -71,40 +89,12 @@ export default function Footer() {
             Argjend Sokoli
           </a>.
         </p>
-        <nav className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-1" aria-label="Legal">
-          <Link href="/privacy-policy" className="transition-colors hover:text-cyan-glow">
-            Privacy Policy
-          </Link>
-          <span aria-hidden="true">&middot;</span>
-          <Link href="/terms-of-service" className="transition-colors hover:text-cyan-glow">
-            Terms of Service
-          </Link>
-          <span aria-hidden="true">&middot;</span>
-          <Link href="/refund-policy" className="transition-colors hover:text-cyan-glow">
-            Refund Policy
-          </Link>
-        </nav>
       </div>
     </footer>
   );
 }
 
-function FacebookIcon({ className, strokeWidth }: { className?: string; strokeWidth?: number }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={strokeWidth ?? 1.75}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-    </svg>
-  );
-}
+
 
 function InstagramIcon({ className, strokeWidth }: { className?: string; strokeWidth?: number }) {
   return (
