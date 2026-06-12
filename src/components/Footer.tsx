@@ -2,16 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { MessageCircle } from "lucide-react";
 import { useLanguage } from "./LanguageProvider";
 
 const SOCIAL_LINKS = [
   { href: "https://instagram.com/befitgymks", label: "Instagram", icon: InstagramIcon },
-  {
-    href: "https://wa.me/38348367555",
-    label: "WhatsApp",
-    icon: MessageCircle,
-  },
 ];
 
 export default function Footer() {
@@ -40,7 +34,7 @@ export default function Footer() {
           </Link>
         </div>
 
-        <div className="flex flex-wrap gap-x-16 gap-y-8">
+        <div className="flex w-full flex-wrap justify-center gap-x-16 gap-y-8 sm:w-auto sm:justify-start">
           <nav className="flex flex-col gap-2">
             {FOOTER_LINKS.map((link) => (
               <Link
@@ -66,7 +60,7 @@ export default function Footer() {
           </nav>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex w-full items-center justify-center gap-3 sm:w-auto sm:justify-start">
           {SOCIAL_LINKS.map(({ href, label, icon: Icon }) => (
             <a
               key={label}

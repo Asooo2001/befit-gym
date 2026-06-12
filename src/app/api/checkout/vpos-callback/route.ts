@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import { getVposSecret, verifySignature } from "@/lib/vpos";
 import { getPackageByName } from "@/lib/membershipPlans";
+import { sendMembershipActivationEmail } from "@/lib/email";
 
 function plainText(body: string, status = 200): Response {
   return new Response(body, { status, headers: { "Content-Type": "text/plain" } });
@@ -123,6 +124,17 @@ export async function POST(request: Request) {
       })
       .eq("id",     transaction.membership_id)
       .eq("status", "pending_payment");
+
+    await notifyMemberByEmail({
+      memberId:      transaction.member_id,
+      membershipId:  transaction.membership_id,
+      tierName,
+      startDate,
+      endDate,
+      amount:        transaction.amount,
+      orderId:       OrderId,
+      bankReference: AuthCode ?? null,
+    });
   } else {
     // Remove the unfulfilled membership. The transactions row already records
     // the failure for audit purposes (and the FK is ON DELETE SET NULL).
@@ -134,4 +146,41 @@ export async function POST(request: Request) {
   }
 
   return plainText(isSuccess ? "APPROVED" : "OK");
+}
+
+// Sends the QR code + receipt email for a newly activated membership. Best
+// effort — a failure here must not affect the bank's view of the payment.
+async function notifyMemberByEmail(params: {
+  memberId: string;
+  membershipId: string;
+  tierName: string;
+  startDate: Date;
+  endDate: Date;
+  amount: number;
+  orderId: string;
+  bankReference: string | null;
+}) {
+  try {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name, email, phone")
+      .eq("id", params.memberId)
+      .maybeSingle();
+
+    if (!profile?.email) return;
+
+    await sendMembershipActivationEmail({
+      to:            profile.email,
+      fullName:      profile.full_name,
+      tierName:      params.tierName,
+      startDate:     params.startDate,
+      endDate:       params.endDate,
+      amount:        params.amount,
+      orderId:       params.orderId,
+      bankReference: params.bankReference,
+      qrValue:       `BEFIT|${profile.phone}|${params.membershipId}`,
+    });
+  } catch (err) {
+    console.error("Failed to send membership activation email:", err);
+  }
 }

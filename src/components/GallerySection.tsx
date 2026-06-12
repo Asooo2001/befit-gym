@@ -32,6 +32,7 @@ function GalleryTile({ src, alt }: { src: string; alt: string }) {
           src={src}
           alt={alt}
           fill
+          sizes="(min-width: 768px) 33vw, 50vw"
           onError={() => setErrored(true)}
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />

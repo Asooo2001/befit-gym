@@ -1,17 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
-import {
-  Banknote,
-  Check,
-  CheckCircle2,
-  CreditCard,
-  Loader2,
-  MessageCircle,
-  QrCode,
-  Wallet,
-  X,
-} from "lucide-react";
+import { Check, CreditCard, Loader2, X } from "lucide-react";
 import { useJoinModal } from "./JoinModalProvider";
 import { useLanguage } from "./LanguageProvider";
 import type { Translations } from "@/lib/translations";
@@ -19,18 +9,12 @@ import { PASS_DURATIONS, getPackageById, type Gender, type PassDurationId } from
 
 const GENDERS: Gender[] = ["female", "male"];
 
-const PAYMENT_METHOD_IDS = ["card", "transfer", "cash"] as const;
-const PAYMENT_METHOD_ICONS = { card: CreditCard, transfer: Wallet, cash: Banknote };
-
-type PaymentMethodId = (typeof PAYMENT_METHOD_IDS)[number];
-
 type FormState = {
   fullName: string;
   email: string;
   phone: string;
   gender: Gender | null;
   passId: PassDurationId | null;
-  paymentMethod: PaymentMethodId | "";
 };
 
 type FormErrors = Partial<Record<keyof FormState, string>>;
@@ -41,7 +25,6 @@ const INITIAL_FORM: FormState = {
   phone: "",
   gender: null,
   passId: null,
-  paymentMethod: "",
 };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -77,10 +60,8 @@ function JoinModalContent({
   const [step, setStep] = useState<1 | 2>(1);
   const [form, setForm] = useState<FormState>({ ...INITIAL_FORM, gender: initialGender });
   const [errors, setErrors] = useState<FormErrors>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRedirectingToBank, setIsRedirectingToBank] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [membershipCode, setMembershipCode] = useState("");
+  const [bankError, setBankError] = useState<string | null>(null);
 
   const updateField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -98,13 +79,6 @@ function JoinModalContent({
     return Object.keys(next).length === 0;
   };
 
-  const validateStep2 = () => {
-    const next: FormErrors = {};
-    if (!form.paymentMethod) next.paymentMethod = t.joinModal.errors.paymentMethod;
-    setErrors(next);
-    return Object.keys(next).length === 0;
-  };
-
   const handleNext = () => {
     if (validateStep1()) setStep(2);
   };
@@ -115,21 +89,11 @@ function JoinModalContent({
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!validateStep2()) return;
-
-    if (form.paymentMethod === "card") {
-      await redirectToBankTerminal();
-      return;
-    }
-
-    setIsSubmitting(true);
-    await new Promise<void>((resolve) => setTimeout(resolve, 2000));
-    setMembershipCode(generateMembershipCode(form.gender!, form.passId!));
-    setIsSubmitting(false);
-    setIsSuccess(true);
+    await redirectToBankTerminal();
   };
 
   const redirectToBankTerminal = async () => {
+    setBankError(null);
     setIsRedirectingToBank(true);
 
     try {
@@ -171,15 +135,12 @@ function JoinModalContent({
       bankForm.submit();
     } catch {
       setIsRedirectingToBank(false);
-      setErrors((prev) => ({
-        ...prev,
-        paymentMethod: t.joinModal.errors.bankTerminal,
-      }));
+      setBankError(t.joinModal.errors.bankTerminal);
     }
   };
 
   const handleClose = () => {
-    if (isSubmitting || isRedirectingToBank) return;
+    if (isRedirectingToBank) return;
     onClose();
   };
 
@@ -207,19 +168,14 @@ function JoinModalContent({
           type="button"
           aria-label={t.joinModal.closeAria}
           onClick={handleClose}
-          disabled={isSubmitting || isRedirectingToBank}
+          disabled={isRedirectingToBank}
           className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-silver transition-colors duration-300 hover:border-cyan-glow hover:text-cyan-glow disabled:cursor-not-allowed disabled:opacity-40"
         >
           <X className="h-4 w-4" strokeWidth={2} />
         </button>
 
         <div className="overflow-y-auto px-6 pb-8 pt-8 sm:px-8">
-          {isSuccess ? (
-            <SuccessState planLabel={planLabel} membershipCode={membershipCode} onClose={handleClose} t={t} />
-          ) : isSubmitting ? (
-            <SubmittingState label={t.joinModal.submitting} />
-          ) : (
-            <>
+          <>
               <div>
                 {planLabel && (
                   <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-glow">
@@ -245,7 +201,7 @@ function JoinModalContent({
                 {step === 1 ? (
                   <PersonalInfoStep form={form} errors={errors} onChange={updateField} t={t} />
                 ) : (
-                  <PaymentStep form={form} errors={errors} onChange={updateField} t={t} />
+                  <PaymentStep planLabel={planLabel} bankError={bankError} t={t} />
                 )}
 
                 <div className="flex items-center justify-between gap-4 pt-2">
@@ -275,15 +231,12 @@ function JoinModalContent({
                       disabled={isRedirectingToBank}
                       className="inline-flex items-center justify-center rounded-full bg-gradient-electric px-8 py-3 text-sm font-semibold uppercase tracking-wide text-obsidian shadow-[0_0_32px_-6px_var(--color-cyan-glow)] transition-transform duration-300 hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      {form.paymentMethod === "card"
-                        ? t.joinModal.buttons.proceedToPayment
-                        : t.joinModal.buttons.confirmPayment}
+                      {t.joinModal.buttons.proceedToPayment}
                     </button>
                   )}
                 </div>
               </form>
             </>
-          )}
         </div>
       </div>
       </div>
@@ -416,78 +369,56 @@ function PersonalInfoStep({ form, errors, onChange, t }: StepProps) {
         </div>
       </Field>
 
-      <Field label={f.membershipPlan} error={errors.passId}>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {PASS_DURATIONS.map(({ id }) => {
-            const pkg = getPackageById(`${form.gender ?? "female"}-${id}`)!;
-            return (
-              <button
-                key={id}
-                type="button"
-                onClick={() => onChange("passId", id)}
-                className={`flex flex-col items-center gap-1 rounded-xl border px-3 py-3 text-center transition-colors duration-300 ${
-                  form.passId === id
-                    ? "border-cyan-glow bg-cyan-glow/10 text-cyan-glow"
-                    : "border-white/10 bg-white/5 text-silver hover:border-white/20 hover:text-foreground"
-                }`}
-              >
-                <span className="text-xs font-semibold uppercase tracking-wide">{t.pricing.passes[id]}</span>
-                <span className="text-sm font-bold text-foreground">€{pkg.price}</span>
-              </button>
-            );
-          })}
-        </div>
-      </Field>
+      {form.gender && (
+        <Field label={f.membershipPlan} error={errors.passId}>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {PASS_DURATIONS.map(({ id }) => {
+              const pkg = getPackageById(`${form.gender}-${id}`)!;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => onChange("passId", id)}
+                  className={`flex flex-col items-center gap-1 rounded-xl border px-3 py-3 text-center transition-colors duration-300 ${
+                    form.passId === id
+                      ? "border-cyan-glow bg-cyan-glow/10 text-cyan-glow"
+                      : "border-white/10 bg-white/5 text-silver hover:border-white/20 hover:text-foreground"
+                  }`}
+                >
+                  <span className="text-xs font-semibold uppercase tracking-wide">{t.pricing.passes[id]}</span>
+                  <span className="text-sm font-bold text-foreground">€{pkg.price}</span>
+                </button>
+              );
+            })}
+          </div>
+        </Field>
+      )}
     </div>
   );
 }
 
-function PaymentStep({ form, errors, onChange, t }: StepProps) {
+function PaymentStep({
+  planLabel,
+  bankError,
+  t,
+}: {
+  planLabel: string;
+  bankError: string | null;
+  t: Translations;
+}) {
   const j = t.joinModal;
-  const PAYMENT_METHODS = PAYMENT_METHOD_IDS.map((id) => ({
-    id,
-    icon: PAYMENT_METHOD_ICONS[id],
-    ...j.paymentMethods[id],
-  }));
 
   return (
     <div className="flex flex-col gap-5">
-      <Field label={j.fields.paymentMethod} error={errors.paymentMethod}>
-        <div className="grid grid-cols-3 gap-2">
-          {PAYMENT_METHODS.map((method) => {
-            const Icon = method.icon;
-            const isActive = form.paymentMethod === method.id;
-            return (
-              <button
-                key={method.id}
-                type="button"
-                onClick={() => onChange("paymentMethod", method.id)}
-                aria-pressed={isActive}
-                className={`flex flex-col items-center gap-2 rounded-xl border px-3 py-3 text-center transition-all duration-300 ${
-                  isActive
-                    ? "border-transparent bg-gradient-electric text-obsidian shadow-[0_0_28px_-6px_var(--color-cyan-glow)]"
-                    : "border-white/10 bg-white/5 text-silver hover:border-white/20 hover:text-foreground"
-                }`}
-              >
-                <Icon className="h-5 w-5" strokeWidth={1.75} />
-                <span className="text-xs font-semibold uppercase tracking-wide">{method.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </Field>
-
-      {form.paymentMethod === "card" && (
-        <InfoPanel icon={CreditCard} title={j.infoPanels.card.title} description={j.infoPanels.card.description} />
+      {planLabel && (
+        <p className="text-sm text-silver">
+          {j.membershipBadge(planLabel)}
+        </p>
       )}
 
-      {form.paymentMethod === "transfer" && (
-        <InfoPanel icon={Wallet} title={j.infoPanels.transfer.title} description={j.infoPanels.transfer.description} />
-      )}
+      <InfoPanel icon={CreditCard} title={j.infoPanels.card.title} description={j.infoPanels.card.description} />
 
-      {form.paymentMethod === "cash" && (
-        <InfoPanel icon={Banknote} title={j.infoPanels.cash.title} description={j.infoPanels.cash.description} />
-      )}
+      {bankError && <p className="text-xs text-red-400">{bankError}</p>}
     </div>
   );
 }
@@ -497,7 +428,7 @@ function InfoPanel({
   title,
   description,
 }: {
-  icon: typeof Wallet;
+  icon: typeof CreditCard;
   title: string;
   description: string;
 }) {
@@ -522,85 +453,6 @@ function BankRedirectOverlay() {
         <Loader2 className="h-9 w-9 animate-spin" strokeWidth={2} />
       </div>
       <p className="text-sm font-semibold uppercase tracking-[0.25em] text-cyan-glow">{t.joinModal.bankRedirect}</p>
-    </div>
-  );
-}
-
-function SubmittingState({ label }: { label: string }) {
-  return (
-    <div className="flex flex-col items-center gap-6 py-20 text-center">
-      <div className="flex h-20 w-20 items-center justify-center rounded-full border border-cyan-glow/30 bg-cyan-glow/10 text-cyan-glow shadow-[0_0_56px_-10px_var(--color-cyan-glow)]">
-        <Loader2 className="h-9 w-9 animate-spin" strokeWidth={2} />
-      </div>
-      <p className="text-sm font-semibold uppercase tracking-[0.25em] text-cyan-glow">{label}</p>
-    </div>
-  );
-}
-
-function generateMembershipCode(gender: Gender, passId: PassDurationId) {
-  const random = Math.random().toString(36).slice(2, 8).toUpperCase();
-  return `BFG-${gender.slice(0, 1).toUpperCase()}${passId.toUpperCase()}-${random}`;
-}
-
-function SuccessState({
-  planLabel,
-  membershipCode,
-  onClose,
-  t,
-}: {
-  planLabel: string;
-  membershipCode: string;
-  onClose: () => void;
-  t: Translations;
-}) {
-  const s = t.joinModal.success;
-  const whatsappHref = `https://wa.me/38348367555?text=${encodeURIComponent(
-    s.whatsappMessage(planLabel, membershipCode)
-  )}`;
-
-  return (
-    <div className="flex flex-col items-center gap-5 py-4 text-center">
-      <div className="flex h-20 w-20 items-center justify-center rounded-full border border-green-400/40 bg-green-500/10 text-green-400 shadow-[0_0_56px_-8px_rgba(74,222,128,0.65)]">
-        <CheckCircle2 className="h-10 w-10" strokeWidth={1.75} />
-      </div>
-
-      <div>
-        <h2 className="text-2xl font-extrabold uppercase tracking-tight text-foreground sm:text-3xl">
-          {s.titleStart}
-          <span className="text-gradient-electric">{s.titleHighlight}</span>
-        </h2>
-        <p className="mt-2 max-w-sm text-sm leading-relaxed text-silver">
-          {s.subtitlePrefix}
-          <span className="font-semibold text-foreground">{planLabel}</span>
-          {s.subtitleSuffix}
-        </p>
-      </div>
-
-      <div className="flex w-full max-w-xs flex-col items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-5">
-        <div className="flex h-32 w-32 items-center justify-center rounded-xl border border-cyan-glow/30 bg-white/5 text-cyan-glow">
-          <QrCode className="h-20 w-20" strokeWidth={1} />
-        </div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-silver">{s.membershipCodeLabel}</p>
-        <p className="font-mono text-sm tracking-[0.25em] text-foreground">{membershipCode}</p>
-      </div>
-
-      <a
-        href={whatsappHref}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-electric px-8 py-3 text-sm font-semibold uppercase tracking-wide text-obsidian shadow-[0_0_32px_-6px_var(--color-cyan-glow)] transition-transform duration-300 hover:scale-105"
-      >
-        <MessageCircle className="h-4 w-4" strokeWidth={2.25} />
-        {s.whatsappCta}
-      </a>
-
-      <button
-        type="button"
-        onClick={onClose}
-        className="text-xs font-semibold uppercase tracking-wide text-silver transition-colors duration-300 hover:text-cyan-glow"
-      >
-        {s.close}
-      </button>
     </div>
   );
 }

@@ -77,7 +77,7 @@ export const translations = {
       titleStart: "Find us in ",
       titleHighlight: "Suhareka",
       subtitle:
-        "Drop by, give us a call, or message us on WhatsApp — our team is happy to help you start your fitness journey.",
+        "Drop by or give us a call — our team is happy to help you start your fitness journey.",
       addressTitle: "Address",
       addressValue: "Rruga Brigada 123, Suhareka 23000, Kosovo",
       hoursTitle: "Operating Hours",
@@ -87,8 +87,6 @@ export const translations = {
         { days: "Sunday", time: "Closed" },
       ],
       phoneTitle: "Phone",
-      whatsappCta: "Chat on WhatsApp",
-      whatsappMessage: "Hi! I'd like to know more about Be Fit Gym Suhareka.",
       mapTitle: "Be Fit Gym Suhareka location",
     },
     footer: {
@@ -101,8 +99,8 @@ export const translations = {
       titleStart: "Join ",
       titleHighlight: "Be Fit Gym",
       subtitle:
-        "Tell us about yourself and choose how you'd like to pay — you'll be training in no time.",
-      steps: { personalInfo: "Personal Info", paymentMethod: "Payment Method" },
+        "Tell us about yourself — you'll pay securely by card and be training in no time.",
+      steps: { personalInfo: "Personal Info", paymentMethod: "Payment" },
       fields: {
         fullName: "Full name",
         fullNamePlaceholder: "Jane Doe",
@@ -112,7 +110,6 @@ export const translations = {
         phonePlaceholder: "+383 4X XXX XXX",
         gender: "Gender",
         membershipPlan: "Pass duration",
-        paymentMethod: "Payment method",
       },
       errors: {
         fullName: "Please enter your full name.",
@@ -120,51 +117,22 @@ export const translations = {
         phone: "Enter a valid phone number.",
         gender: "Select your gender.",
         passId: "Select a pass duration.",
-        paymentMethod: "Select a payment method.",
         bankTerminal: "Couldn't reach the bank terminal. Please try again.",
       },
       buttons: {
         back: "Back",
         continue: "Continue",
         proceedToPayment: "Proceed to Payment",
-        confirmPayment: "Confirm Payment",
         close: "Close",
-      },
-      paymentMethods: {
-        card: { label: "Card", description: "Pay securely online" },
-        transfer: { label: "Bank Transfer", description: "Pay via bank transfer" },
-        cash: { label: "Cash at Gym", description: "Pay when you arrive" },
       },
       infoPanels: {
         card: {
           title: "Secure card payment",
           description:
-            "After you continue you'll be redirected to your bank's secure payment page to enter your card details. Be Fit Gym never sees or stores your card number.",
-        },
-        transfer: {
-          title: "Pay by bank transfer",
-          description:
-            "We'll email you our gym's IBAN and a payment reference once you submit this form. Most local banks process gym membership transfers within one business day.",
-        },
-        cash: {
-          title: "Pay cash at the front desk",
-          description:
-            "Reserve your spot now and settle your membership fee in cash on your first visit. Just bring a valid ID to complete registration.",
+            "After you continue you'll be redirected to your bank's secure payment page to enter your card details. Be Fit Gym never sees or stores your card number. Your membership and QR code activate immediately once payment is confirmed.",
         },
       },
       bankRedirect: "Redirecting to secure bank terminal...",
-      submitting: "Securing transaction connection...",
-      success: {
-        titleStart: "Welcome to the ",
-        titleHighlight: "Team!",
-        subtitlePrefix: "Your ",
-        subtitleSuffix: " membership is confirmed and ready to activate.",
-        membershipCodeLabel: "Membership code",
-        whatsappCta: "Message Gym on WhatsApp to Activate Key",
-        whatsappMessage: (tier: string, code: string) =>
-          `Hi! I just signed up for the ${tier} membership (code ${code}). I'd like to activate my key.`,
-        close: "Close",
-      },
     },
     checkout: {
       success: {
@@ -174,14 +142,11 @@ export const translations = {
         titleHighlight: "Your Membership is Active.",
         bankConfirmation: "Bank Confirmation",
         detailLabels: { Response: "Response", "Auth Code": "Auth Code", "Return Code": "Return Code", "Order ID": "Order ID" },
-        oneLastStep: "One last step",
+        oneLastStep: "You're all set",
         descriptionPrefix:
-          "A confirmation email with your receipt is on its way. Please show it at the front desk when you visit ",
-        descriptionSuffix: " so we can activate your access card.",
+          "Your membership is active immediately. A confirmation email with your QR code and receipt is on its way — show the QR code at the front desk when you visit ",
+        descriptionSuffix: " to check in.",
         locationLabel: "Be Fit Gym, Suhareka",
-        saveToWhatsApp: "Save Pass to WhatsApp",
-        whatsappPassMessage: (tierName: string, phone: string, membershipId: string) =>
-          `Hi! I just completed payment for my ${tierName} membership. Phone: ${phone}, Membership ID: ${membershipId}. I'd like to activate my access card.`,
         backToHome: "Back to Home",
       },
       failure: {
@@ -189,7 +154,7 @@ export const translations = {
         title: "Your transaction was declined or canceled",
         description:
           "The bank did not complete this payment, so your membership has not been charged or activated. This can happen if the payment was canceled, the card was declined, or the session timed out.",
-        tryAgain: "Try Another Payment Method or Pay at Desk",
+        tryAgain: "Try Again",
         backToHome: "Back to Home",
       },
     },
@@ -272,7 +237,7 @@ export const translations = {
       titleStart: "Na gjej në ",
       titleHighlight: "Suharekë",
       subtitle:
-        "Kalo te ne, na telefono ose na shkruaj në WhatsApp — ekipi ynë gëzohet të të ndihmojë të nisësh udhëtimin tënd drejt formës fizike.",
+        "Kalo te ne ose na telefono — ekipi ynë gëzohet të të ndihmojë të nisësh udhëtimin tënd drejt formës fizike.",
       addressTitle: "Adresa",
       addressValue: "Rruga Brigada 123, Suharekë 23000, Kosovë",
       hoursTitle: "Orari i Punës",
@@ -282,8 +247,6 @@ export const translations = {
         { days: "E diel", time: "Mbyllur" },
       ],
       phoneTitle: "Telefoni",
-      whatsappCta: "Shkruaj në WhatsApp",
-      whatsappMessage: "Përshëndetje! Do të doja të mësoja më shumë rreth Be Fit Gym Suharekë.",
       mapTitle: "Lokacioni i Be Fit Gym Suharekë",
     },
     footer: {
@@ -296,8 +259,8 @@ export const translations = {
       titleStart: "Bashkohu me ",
       titleHighlight: "Be Fit Gym",
       subtitle:
-        "Na trego pak për veten dhe zgjidh mënyrën e pagesës — do të jesh duke u stërvitur shumë shpejt.",
-      steps: { personalInfo: "Të Dhënat Personale", paymentMethod: "Mënyra e Pagesës" },
+        "Na trego pak për veten — do të paguash në mënyrë të sigurt me kartelë dhe do të jesh duke u stërvitur shumë shpejt.",
+      steps: { personalInfo: "Të Dhënat Personale", paymentMethod: "Pagesa" },
       fields: {
         fullName: "Emri i plotë",
         fullNamePlaceholder: "Jane Doe",
@@ -307,7 +270,6 @@ export const translations = {
         phonePlaceholder: "+383 4X XXX XXX",
         gender: "Gjinia",
         membershipPlan: "Kohëzgjatja e pasit",
-        paymentMethod: "Mënyra e pagesës",
       },
       errors: {
         fullName: "Të lutemi shkruaj emrin tënd të plotë.",
@@ -315,51 +277,22 @@ export const translations = {
         phone: "Shkruaj një numër telefoni të vlefshëm.",
         gender: "Zgjidh gjininë.",
         passId: "Zgjidh kohëzgjatjen e pasit.",
-        paymentMethod: "Zgjidh një mënyrë pagese.",
         bankTerminal: "Nuk u arrit të kontaktohej terminali bankar. Provo përsëri.",
       },
       buttons: {
         back: "Prapa",
         continue: "Vazhdo",
         proceedToPayment: "Vazhdo te Pagesa",
-        confirmPayment: "Konfirmo Pagesën",
         close: "Mbyll",
-      },
-      paymentMethods: {
-        card: { label: "Kartelë", description: "Paguaj online në mënyrë të sigurt" },
-        transfer: { label: "Transfer Bankar", description: "Paguaj përmes transferit bankar" },
-        cash: { label: "Cash në Sallë", description: "Paguaj kur të vish" },
       },
       infoPanels: {
         card: {
           title: "Pagesë e sigurt me kartelë",
           description:
-            "Pasi të vazhdosh, do të ridrejtohesh te faqja e sigurt e pagesës së bankës tënde për të futur të dhënat e kartelës. Be Fit Gym nuk i sheh dhe nuk i ruan kurrë të dhënat e kartelës tënde.",
-        },
-        transfer: {
-          title: "Paguaj me transfer bankar",
-          description:
-            "Do të të dërgojmë me email IBAN-in e sallës dhe një referencë pagese pasi ta dërgosh këtë formular. Shumica e bankave lokale i procesojnë transferet për anëtarësim brenda një dite pune.",
-        },
-        cash: {
-          title: "Paguaj cash te recepsioni",
-          description:
-            "Rezervo vendin tënd tani dhe paguaj tarifën e anëtarësimit cash gjatë vizitës së parë. Mjafton të sjellësh një ID të vlefshme për të përfunduar regjistrimin.",
+            "Pasi të vazhdosh, do të ridrejtohesh te faqja e sigurt e pagesës së bankës tënde për të futur të dhënat e kartelës. Be Fit Gym nuk i sheh dhe nuk i ruan kurrë të dhënat e kartelës tënde. Anëtarësimi dhe kodi QR aktivizohen menjëherë pasi pagesa konfirmohet.",
         },
       },
       bankRedirect: "Duke u ridrejtuar te terminali i sigurt bankar...",
-      submitting: "Duke siguruar lidhjen e transaksionit...",
-      success: {
-        titleStart: "Mirë se erdhe në ",
-        titleHighlight: "Ekip!",
-        subtitlePrefix: "Anëtarësimi yt ",
-        subtitleSuffix: " është konfirmuar dhe gati për t'u aktivizuar.",
-        membershipCodeLabel: "Kodi i anëtarësimit",
-        whatsappCta: "Shkruaj Sallës në WhatsApp për të Aktivizuar Çelësin",
-        whatsappMessage: (tier: string, code: string) =>
-          `Përshëndetje! Sapo u regjistrova për anëtarësimin ${tier} (kodi ${code}). Do të doja të aktivizoja çelësin tim.`,
-        close: "Mbyll",
-      },
     },
     checkout: {
       success: {
@@ -369,14 +302,11 @@ export const translations = {
         titleHighlight: "Anëtarësimi Yt është Aktiv.",
         bankConfirmation: "Konfirmimi Bankar",
         detailLabels: { Response: "Përgjigja", "Auth Code": "Kodi i Autorizimit", "Return Code": "Kodi i Kthimit", "Order ID": "ID e Porosisë" },
-        oneLastStep: "Edhe një hap i fundit",
+        oneLastStep: "Gati je",
         descriptionPrefix:
-          "Një email konfirmimi me faturën tënde është në rrugë. Të lutemi tregoje atë te recepsioni kur të na vizitosh në ",
-        descriptionSuffix: " në mënyrë që të aktivizojmë kartën tënde të hyrjes.",
+          "Anëtarësimi yt është aktiv menjëherë. Një email konfirmimi me kodin QR dhe faturën tënde është në rrugë — tregoje kodin QR te recepsioni kur të na vizitosh në ",
+        descriptionSuffix: " për check-in.",
         locationLabel: "Be Fit Gym, Suharekë",
-        saveToWhatsApp: "Ruaj Passin në WhatsApp",
-        whatsappPassMessage: (tierName: string, phone: string, membershipId: string) =>
-          `Përshëndetje! Sapo përfundova pagesën për anëtarësimin ${tierName}. Telefoni: ${phone}, ID e anëtarësimit: ${membershipId}. Dëshiroj të aktivizoj kartën time të hyrjes.`,
         backToHome: "Kthehu në Ballina",
       },
       failure: {
@@ -384,7 +314,7 @@ export const translations = {
         title: "Transaksioni yt u refuzua ose u anulua",
         description:
           "Banka nuk e përfundoi këtë pagesë, prandaj anëtarësimi yt nuk është ngarkuar apo aktivizuar. Kjo mund të ndodhë nëse pagesa u anulua, kartela u refuzua, ose seanca skadoi.",
-        tryAgain: "Provo një Mënyrë Tjetër Pagese ose Paguaj në Sallë",
+        tryAgain: "Provo Përsëri",
         backToHome: "Kthehu në Ballina",
       },
     },

@@ -4,6 +4,7 @@ import QRCode from "react-qr-code";
 import { CalendarClock, IdCard } from "lucide-react";
 import { createClient } from "@/utils/supabase/server";
 import RenewMembershipButton from "@/components/RenewMembershipButton";
+import SignOutButton from "@/components/SignOutButton";
 
 const EXPIRY_WARNING_DAYS = 5;
 
@@ -113,6 +114,10 @@ export default async function DashboardPage() {
               />
             </div>
           )}
+
+          <div className="mt-6 flex justify-center">
+            <SignOutButton />
+          </div>
         </div>
       </div>
     </section>

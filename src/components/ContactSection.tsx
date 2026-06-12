@@ -1,15 +1,10 @@
 "use client";
 
-import { Clock, MapPin, Phone, MessageCircle } from "lucide-react";
+import { Clock, MapPin, Phone } from "lucide-react";
 import { useLanguage } from "./LanguageProvider";
-
-const WHATSAPP_NUMBER = "+38348367555";
 
 export default function ContactSection() {
   const { t } = useLanguage();
-  const whatsappHref = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-    t.contact.whatsappMessage
-  )}`;
 
   return (
     <section id="location" className="relative bg-obsidian py-24">
@@ -66,16 +61,6 @@ export default function ContactSection() {
                 <p className="mt-1 text-sm text-silver">+383 48 367 555</p>
               </div>
             </div>
-
-            <a
-              href={whatsappHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 inline-flex items-center justify-center gap-3 rounded-full bg-[#25D366] px-6 py-3 text-sm font-semibold uppercase tracking-wide text-obsidian shadow-[0_0_32px_-8px_#25D366] transition-transform duration-300 hover:scale-105"
-            >
-              <MessageCircle className="h-5 w-5" strokeWidth={2} />
-              {t.contact.whatsappCta}
-            </a>
           </div>
 
           <div className="flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm">

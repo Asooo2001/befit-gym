@@ -42,6 +42,7 @@ export default function PricingSection() {
                   alt=""
                   aria-hidden="true"
                   fill
+                  sizes="(min-width: 768px) 50vw, 100vw"
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
 

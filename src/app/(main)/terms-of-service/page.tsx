@@ -103,9 +103,9 @@ export default function TermsOfServicePage() {
             <a href="mailto:info@befitgym.com" className="text-cyan-glow hover:underline">
               info@befitgym.com
             </a>{" "}
-            or via{" "}
-            <a href="https://wa.me/38348367555" className="text-cyan-glow hover:underline">
-              WhatsApp (+383 48 367 555)
+            or by phone at{" "}
+            <a href="tel:+38348367555" className="text-cyan-glow hover:underline">
+              +383 48 367 555
             </a>{" "}
             with the subject or opening line &ldquo;Membership Pause Request&rdquo;.
           </p>
@@ -156,8 +156,8 @@ export default function TermsOfServicePage() {
           <p>
             Be Fit Gym &mdash; Rr. Lidhja e Prizrenit, Suhareka 23000, Republic of Kosovo
             <br />
-            WhatsApp / phone:{" "}
-            <a href="https://wa.me/38348367555" className="text-cyan-glow hover:underline">
+            Phone:{" "}
+            <a href="tel:+38348367555" className="text-cyan-glow hover:underline">
               +383 48 367 555
             </a>
           </p>

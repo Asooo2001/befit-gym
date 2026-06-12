@@ -71,7 +71,7 @@ export default function Navigation() {
             alt="Be Fit Gym"
             width={200}
             height={100}
-            className="h-50 w-auto"
+            className="h-auto w-50"
             priority
           />
         </Link>
@@ -154,23 +154,25 @@ export default function Navigation() {
                 {link.label}
               </Link>
             ))}
-            <Link
-              href="/login"
-              onClick={() => setIsOpen(false)}
-              className="rounded-lg px-3 py-3 text-base font-medium text-silver transition-colors hover:bg-white/5 hover:text-cyan-glow"
-            >
-              {t.nav.signIn}
-            </Link>
-            <button
-              type="button"
-              onClick={() => {
-                setIsOpen(false);
-                openJoinModal();
-              }}
-              className="mt-2 inline-flex items-center justify-center rounded-full bg-gradient-electric px-6 py-3 text-base font-semibold text-obsidian shadow-[0_0_24px_-4px_var(--color-cyan-glow)]"
-            >
-              {t.nav.joinNow}
-            </button>
+            <div className="mt-2 flex items-center gap-3">
+              <Link
+                href="/login"
+                onClick={() => setIsOpen(false)}
+                className="flex-1 rounded-full border border-white/15 px-5 py-3 text-center text-base font-semibold text-silver transition-colors hover:border-cyan-glow/50 hover:text-cyan-glow"
+              >
+                {t.nav.signIn}
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false);
+                  openJoinModal();
+                }}
+                className="flex-1 inline-flex items-center justify-center rounded-full bg-gradient-electric px-6 py-3 text-base font-semibold text-obsidian shadow-[0_0_24px_-4px_var(--color-cyan-glow)]"
+              >
+                {t.nav.joinNow}
+              </button>
+            </div>
           </nav>
         </div>
       </div>

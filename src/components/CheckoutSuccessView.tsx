@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { CheckCircle2, Loader2, MapPin, MessageCircle, Receipt } from "lucide-react";
+import { CheckCircle2, Loader2, MapPin, Receipt } from "lucide-react";
 import QRCode from "react-qr-code";
 import { useLanguage } from "./LanguageProvider";
 
@@ -19,7 +19,6 @@ type MemberData = {
 };
 
 const MAX_POLL_ATTEMPTS = 15; // 30 seconds at 2 s intervals
-const GYM_WHATSAPP = "38348367555";
 
 export default function CheckoutSuccessView({
   bankDetails,
@@ -89,12 +88,6 @@ export default function CheckoutSuccessView({
     ? `BEFIT|${memberData.phone}|${memberData.membershipId}`
     : null;
 
-  const whatsappHref = memberData
-    ? `https://wa.me/${GYM_WHATSAPP}?text=${encodeURIComponent(
-        s.whatsappPassMessage(memberData.tierName, memberData.phone, memberData.membershipId)
-      )}`
-    : null;
-
   return (
     <section className="relative bg-obsidian py-24">
       <div className="mx-auto w-full max-w-2xl px-6">
@@ -139,18 +132,6 @@ export default function CheckoutSuccessView({
                 />
               </div>
               <p className="font-mono text-[11px] break-all text-silver">{qrValue}</p>
-
-              {whatsappHref && (
-                <a
-                  href={whatsappHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-electric px-8 py-3 text-sm font-semibold uppercase tracking-wide text-obsidian shadow-[0_0_32px_-6px_var(--color-cyan-glow)] transition-transform duration-300 hover:scale-105"
-                >
-                  <MessageCircle className="h-4 w-4" strokeWidth={2.25} />
-                  {s.saveToWhatsApp}
-                </a>
-              )}
             </div>
           )}
 

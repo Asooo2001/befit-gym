@@ -25,6 +25,7 @@ export default function HeroSection() {
         aria-hidden="true"
         fill
         priority
+        sizes="100vw"
         className="pointer-events-none absolute inset-0 object-cover"
       />
       <div
@@ -94,14 +95,14 @@ export default function HeroSection() {
           <button
             type="button"
             onClick={() => openJoinModal()}
-            className="inline-flex items-center justify-center rounded-full bg-gradient-electric px-8 py-3.5 text-sm font-semibold uppercase tracking-wide text-obsidian shadow-[0_0_32px_-6px_var(--color-cyan-glow)] transition-transform duration-300 hover:scale-105"
+            className="inline-flex w-full items-center justify-center rounded-full bg-gradient-electric px-8 py-3.5 text-sm font-semibold uppercase tracking-wide text-obsidian shadow-[0_0_32px_-6px_var(--color-cyan-glow)] transition-transform duration-300 hover:scale-105 sm:w-auto"
           >
             {t.hero.ctaPrimary}
           </button>
 
           <Link
             href="#memberships"
-            className="inline-flex items-center justify-center rounded-full border border-white/20 px-8 py-3.5 text-sm font-semibold uppercase tracking-wide text-foreground transition-colors duration-300 hover:border-cyan-glow hover:text-cyan-glow"
+            className="inline-flex w-full items-center justify-center rounded-full border border-white/20 px-8 py-3.5 text-sm font-semibold uppercase tracking-wide text-foreground transition-colors duration-300 hover:border-cyan-glow hover:text-cyan-glow sm:w-auto"
           >
             {t.hero.ctaSecondary}
           </Link>

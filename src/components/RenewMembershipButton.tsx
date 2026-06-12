@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { Loader2, Zap } from "lucide-react";
-import { getPackageByName } from "@/lib/membershipPlans";
+import {
+  PASS_DURATIONS,
+  getPackageByName,
+  getPackageById,
+  type Gender,
+  type PassDurationId,
+} from "@/lib/membershipPlans";
 
 interface RenewMembershipButtonProps {
   fullName: string;
@@ -17,6 +23,13 @@ export default function RenewMembershipButton({
   phone,
   tierName,
 }: RenewMembershipButtonProps) {
+  const currentPackage = getPackageByName(tierName);
+  const gender: Gender = currentPackage?.gender ?? "male";
+
+  const [isChoosing, setIsChoosing] = useState(false);
+  const [selectedDuration, setSelectedDuration] = useState<PassDurationId>(
+    currentPackage?.durationId ?? "1month"
+  );
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,7 +38,7 @@ export default function RenewMembershipButton({
     setIsRedirecting(true);
 
     try {
-      const packageId = getPackageByName(tierName)?.id ?? "male-1month";
+      const packageId = `${gender}-${selectedDuration}`;
 
       const response = await fetch("/api/checkout/vpos-initiate", {
         method: "POST",
@@ -61,8 +74,57 @@ export default function RenewMembershipButton({
     }
   };
 
+  if (!isChoosing) {
+    return (
+      <div className="flex flex-col items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setIsChoosing(true)}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-electric px-8 py-4 text-sm font-semibold uppercase tracking-wide text-obsidian shadow-[0_0_40px_-8px_var(--color-cyan-glow)] transition-transform duration-300 hover:scale-105"
+        >
+          <Zap className="h-4 w-4" strokeWidth={2.25} />
+          Renew Membership
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-center gap-4">
+      <div className="grid w-full grid-cols-3 gap-2">
+        {PASS_DURATIONS.map(({ id }) => {
+          const pkg = getPackageById(`${gender}-${id}`)!;
+          const isSelected = selectedDuration === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setSelectedDuration(id)}
+              className={`flex flex-col items-center gap-1 rounded-xl border px-3 py-3 text-center transition-colors duration-300 ${
+                isSelected
+                  ? "border-cyan-glow bg-cyan-glow/10 text-cyan-glow"
+                  : "border-white/10 bg-white/5 text-silver hover:border-white/20 hover:text-foreground"
+              }`}
+            >
+              <span className="text-xs font-semibold uppercase tracking-wide">
+                {pkg.durationId === "1day"
+                  ? "1 Day"
+                  : pkg.durationId === "1week"
+                    ? "1 Week"
+                    : pkg.durationId === "1month"
+                      ? "1 Month"
+                      : pkg.durationId === "3months"
+                        ? "3 Months"
+                        : pkg.durationId === "6months"
+                          ? "6 Months"
+                          : "1 Year"}
+              </span>
+              <span className="text-sm font-bold text-foreground">€{pkg.price}</span>
+            </button>
+          );
+        })}
+      </div>
+
       <button
         type="button"
         onClick={handleRenew}
@@ -77,7 +139,7 @@ export default function RenewMembershipButton({
         ) : (
           <>
             <Zap className="h-4 w-4" strokeWidth={2.25} />
-            Renew Membership for 30 Days
+            Proceed to Payment
           </>
         )}
       </button>
